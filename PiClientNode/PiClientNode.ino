@@ -88,12 +88,24 @@ const static String VERSION  = "20170211_0304";
 //#define PIN_DHT 2     // what digital pin we're connected to
 //#define DHT_TYPE DHT11   // DHT 11
 #define DHT11_01_PIN 10
-#define DHT11_02_PIN 32
-#define DHT11_03_PIN 33
+#if defined( DEFINE_DEVICE_MEGA )
+  #define DHT11_02_PIN 38
+  #define DHT11_03_PIN 39
+  #define DHT11_04_PIN 40
+  #define DHT11_05_PIN 41
+  #define DHT11_06_PIN 42
+  #define DHT11_07_PIN 43
+#endif
 
 DHT dht_01( DHT11_01_PIN, DHT11 );
-DHT dht_02( DHT11_02_PIN, DHT11 );
-DHT dht_03( DHT11_03_PIN, DHT11 );
+#if defined( DEFINE_DEVICE_MEGA )
+  DHT dht_02( DHT11_02_PIN, DHT11 );
+  DHT dht_03( DHT11_03_PIN, DHT11 );
+  DHT dht_04( DHT11_04_PIN, DHT11 );
+  DHT dht_05( DHT11_05_PIN, DHT11 );
+  DHT dht_06( DHT11_06_PIN, DHT11 );
+  DHT dht_07( DHT11_07_PIN, DHT11 );
+#endif
 #define MAX_DHT_DEV 3 // 3 DHT devices
 
 RGBdriver rgbdriver_01(  8,  9 );
@@ -104,9 +116,9 @@ RGBdriver rgbdriver_04( 28, 29 );
 
 
 void initPins() {
-  dht_01.begin();
-  dht_02.begin();
-  dht_03.begin();
+//  dht_01.begin();
+//  dht_02.begin();
+//  dht_03.begin();
 }
 
 
@@ -137,6 +149,7 @@ String strLastFailedMessage = "";
 
 
 #if defined( DEFINE_DEVICE_MEGA )
+  const static long MAX_ANALOG_PIN = 15;
   const static long MAX_PIN = 53; // pins 0 and 1 are reserved. 2 to 13 are usable [on Uno].
   // output pin modes   0=undefined, 1=read mode, 2=write digital, 3=write analog
   //                           x  x  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 x1 x2 x3 x4 x5 x6 x7 x8 x9 30 x1 x2 x3 x4 x5 x6 x7 x8 x9 40 x1 x2 x3 x4 x5 x6 x7 x8 x9 50 x1 x2 x3
@@ -145,6 +158,7 @@ String strLastFailedMessage = "";
 #endif
 
 #if defined( DEFINE_DEVICE_UNO )
+  const static long MAX_ANALOG_PIN = 5;
   const static long MAX_PIN = 13; // pins 0 and 1 are reserved. 2 to 13 are usable [on Uno].
   // output pin modes   0=undefined, 1=read mode, 2=write digital, 3=write analog
   //                           x  x  2  3  4  5  6  7  8  9 10 11 12 13
@@ -317,7 +331,7 @@ String build_Digital() {
 
 String build_Analog() {
   String str = "";
-  for ( int iA = 0; iA < 6; iA++ ) {
+  for ( int iA = 0; iA <= MAX_ANALOG_PIN; iA++ ) {
     int iValue = analogRead( iA );
     str += ",\"A";
     str += String( iA );
@@ -401,19 +415,16 @@ String buildSendMessage( int iSendCode ) {
 String buildDHTSnippet( DHT dht,
                         String strSuffix ) {
   
-//  dht01.read11( 13 );
-  
   // Read temperature as Fahrenheit (isFahrenheit = true)
   float fTemperature = dht.readTemperature(true);
 //  float fTemperature = dht.readTemperature();
   float fHumidity = dht.readHumidity();
 
   String str = "";
-//  String strSuffix = "01";
 
   // Check if any reads failed and exit early (to try again).
   if ( isnan(fHumidity) || isnan(fTemperature) ) {
-//    str += "&Temp=NA&Humid=NA";
+    str += "&Temp=NA&Humid=NA";
   } else {
     str += ",\"Temp" + strSuffix + "\"=";
     str += String( fTemperature );
@@ -710,6 +721,20 @@ int processRequestSerial( String strRequest ) {
             
           } else if ( 4==lValue ) {  // mode 4: specialized device enabled
             // any other value will disable
+            
+            if ( lPin==DHT11_01_PIN ) {
+              dht_01.begin();
+            } else if ( lPin==DHT11_02_PIN ) {
+              dht_02.begin();
+            } else if ( lPin==DHT11_03_PIN ) {
+              dht_03.begin();
+            } else if ( lPin==DHT11_04_PIN ) {
+              dht_04.begin();
+            } else if ( lPin==DHT11_05_PIN ) {
+              dht_05.begin();
+            }
+
+            
 //
 //          } else if ( 5==lValue ) {  // mode 5: RGBDriver
 //            rgbdriver_01.begin();
